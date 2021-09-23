@@ -39,7 +39,8 @@ main(int argc, char *argv[])
 		for (int i = 2; i <= max; i++) {
 			// Se podria optimizar y que el primero ya sea un filtro de 2
 			if (write(fd_der[WRITE_INDEX], &i, sizeof(i)) < 0)
-				error("Error al enviar un numero al segundo proceso");
+				error("Error al enviar un numero al segundo "
+				      "proceso");
 		}
 
 		close(fd_der[WRITE_INDEX]);
@@ -54,12 +55,18 @@ main(int argc, char *argv[])
 		int filtro;
 		bool primero = true;
 
-		while ((leidos = read(fd_izq[READ_INDEX], &numero_leido, sizeof(numero_leido))) > 0) {
+		while ((leidos = read(fd_izq[READ_INDEX],
+		                      &numero_leido,
+		                      sizeof(numero_leido))) > 0) {
 			if (!primero) {
 				// Mando los números al hijo
 				if (numero_leido % filtro != 0) {
-					if (write(fd_der[WRITE_INDEX], &numero_leido, sizeof(numero_leido)) < 0)
-						error("Error al enviar un número al siguiente proceso");
+					if (write(fd_der[WRITE_INDEX],
+					          &numero_leido,
+					          sizeof(numero_leido)) < 0)
+						error("Error al enviar un "
+						      "número al siguiente "
+						      "proceso");
 				}
 				continue;
 			}

@@ -54,7 +54,7 @@ main(int argc, char *argv[])
 		if (i < 0)
 			error("Error al crear un nuevo proceso");
 
-		if (i == 0) { // Hijo
+		if (i == 0) {  // Hijo
 			if (execvp(argv[1], lineas) < 0)
 				error("Error en exec");
 		}

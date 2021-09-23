@@ -14,7 +14,10 @@
 		exit(-1); \
 	} while (0);
 
-void read_dir(DIR *dir, char path[PATH_MAX], char *busqueda, char *(*cmp_func)(char *, char *));
+void read_dir(DIR *dir,
+              char path[PATH_MAX],
+              char *busqueda,
+              char *(*cmp_func)(char *, char *) );
 
 int
 main(int argc, char *argv[])
@@ -39,7 +42,12 @@ main(int argc, char *argv[])
 	return 0;
 }
 
-void read_dir(DIR *dir, char path[PATH_MAX], char *busqueda, char *(*cmp_func)(char *, char *)) {
+void
+read_dir(DIR *dir,
+         char path[PATH_MAX],
+         char *busqueda,
+         char *(*cmp_func)(char *, char *) )
+{
 	struct dirent *ent;
 	while ((ent = readdir(dir)) != NULL) {
 		// Ignoro los alias . y ..
@@ -48,7 +56,7 @@ void read_dir(DIR *dir, char path[PATH_MAX], char *busqueda, char *(*cmp_func)(c
 
 		if ((*cmp_func)(ent->d_name, busqueda) != NULL)
 			printf("%s%s\n", path, ent->d_name);
-		
+
 		if (ent->d_type == DT_DIR) {
 			char path_nuevo[PATH_MAX];
 			strcpy(path_nuevo, path);
@@ -57,7 +65,8 @@ void read_dir(DIR *dir, char path[PATH_MAX], char *busqueda, char *(*cmp_func)(c
 
 			int dir_fd = dirfd(dir);
 			if (dir_fd < 0)
-				error("Error al obtener el File Descriptor del directorio");
+				error("Error al obtener el File Descriptor del "
+				      "directorio");
 
 			int subdir_fd = openat(dir_fd, ent->d_name, O_DIRECTORY);
 			if (subdir_fd < 0)
@@ -65,7 +74,8 @@ void read_dir(DIR *dir, char path[PATH_MAX], char *busqueda, char *(*cmp_func)(c
 
 			DIR *subdir = fdopendir(subdir_fd);
 			if (subdir == NULL)
-				error("Error al obtener la estructura del directorio");
+				error("Error al obtener la estructura del "
+				      "directorio");
 
 			read_dir(subdir, path_nuevo, busqueda, cmp_func);
 		}

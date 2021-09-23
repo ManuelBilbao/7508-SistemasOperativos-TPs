@@ -16,8 +16,8 @@ int
 main(void)
 {
 	srand(time(NULL));
-	int fdPadreHijo[2]; // Padre --> Hijo
-	int fdHijoPadre[2]; // Hijo --> Padre
+	int fdPadreHijo[2];  // Padre --> Hijo
+	int fdHijoPadre[2];  // Hijo --> Padre
 
 	printf("Hola, soy PID %d:\n", getpid());
 
@@ -27,8 +27,12 @@ main(void)
 	if (pipe(fdHijoPadre) < 0)
 		error("Error al abrir un pipe");
 
-	printf("  - primer pipe me devuelve: [%i, %i]\n", fdPadreHijo[0], fdPadreHijo[1]);
-	printf("  - segundo pipe me devuelve: [%i, %i]\n\n", fdHijoPadre[0], fdHijoPadre[1]);
+	printf("  - primer pipe me devuelve: [%i, %i]\n",
+	       fdPadreHijo[0],
+	       fdPadreHijo[1]);
+	printf("  - segundo pipe me devuelve: [%i, %i]\n\n",
+	       fdHijoPadre[0],
+	       fdHijoPadre[1]);
 
 	int i_fork = fork();
 
@@ -47,8 +51,11 @@ main(void)
 		printf("Donde fork me devuelve 0:\n");
 		printf("  - getpid me devuelve: %i\n", getpid());
 		printf("  - getppid me devuelve: %i\n", getppid());
-		printf("  - recibo valor %li vía fd=%i\n", lectura, fdPadreHijo[READ_INDEX]);
-		printf("  - reenvío valor en fd=%i y termino\n\n", fdHijoPadre[WRITE_INDEX]);
+		printf("  - recibo valor %li vía fd=%i\n",
+		       lectura,
+		       fdPadreHijo[READ_INDEX]);
+		printf("  - reenvío valor en fd=%i y termino\n\n",
+		       fdHijoPadre[WRITE_INDEX]);
 
 		if (write(fdHijoPadre[WRITE_INDEX], &lectura, sizeof(lectura)) < 0)
 			error("[Hijo] Error al escribir en el pipe");
@@ -67,7 +74,9 @@ main(void)
 		printf("  - getpid me devuelve: %i\n", getpid());
 		printf("  - getppid me devuelve: %i\n", getppid());
 		printf("  - random me devuelve: %li\n", randNum);
-		printf("  - envío valor %li a través de fd=%i\n\n", randNum, fdPadreHijo[WRITE_INDEX]);
+		printf("  - envío valor %li a través de fd=%i\n\n",
+		       randNum,
+		       fdPadreHijo[WRITE_INDEX]);
 
 		if (write(fdPadreHijo[WRITE_INDEX], &randNum, sizeof(randNum)) < 0)
 			error("[Padre] Error al escribir en el pipe");
@@ -76,7 +85,9 @@ main(void)
 			error("[Padre] Error al leer del pipe");
 
 		printf("Hola, de nuevo PID %i:\n", getpid());
-		printf("  - recibí valor %li vía fd=%i\n", lectura, fdHijoPadre[READ_INDEX]);
+		printf("  - recibí valor %li vía fd=%i\n",
+		       lectura,
+		       fdHijoPadre[READ_INDEX]);
 
 		close(fdPadreHijo[WRITE_INDEX]);
 		close(fdHijoPadre[READ_INDEX]);
