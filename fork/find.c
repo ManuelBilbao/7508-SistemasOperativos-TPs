@@ -17,7 +17,7 @@
 void read_dir(DIR *dir,
               char path[PATH_MAX],
               char *busqueda,
-              char *(*cmp_func)(char *, char *) );
+              char *(*cmp_func)(char const *, char const *) );
 
 int
 main(int argc, char *argv[])
@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 		error("No se pudo abrir el directorio");
 
 	char *busqueda = "";
-	char *(*cmp_func)(char *, char *) = &strstr;
+	char *(*cmp_func)(char const *, char const *) = &strstr;
 	if (argc == 2) {
 		busqueda = argv[1];
 	} else if (argc == 3 && !strcmp(argv[1], "-i")) {
@@ -46,7 +46,7 @@ void
 read_dir(DIR *dir,
          char path[PATH_MAX],
          char *busqueda,
-         char *(*cmp_func)(char *, char *) )
+         char *(*cmp_func)(char const *, char const *) )
 {
 	struct dirent *ent;
 	while ((ent = readdir(dir)) != NULL) {
