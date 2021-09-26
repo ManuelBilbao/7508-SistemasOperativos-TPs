@@ -91,6 +91,9 @@ main(void)
 
 		close(fdPadreHijo[WRITE_INDEX]);
 		close(fdHijoPadre[READ_INDEX]);
+
+		if (wait(NULL) < 0)
+			error("Error en el wait");
 	}
 
 	return 0;
