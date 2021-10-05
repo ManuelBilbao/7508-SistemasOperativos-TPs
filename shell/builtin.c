@@ -1,4 +1,7 @@
 #include "builtin.h"
+#include <linux/limits.h>
+
+extern int status;
 
 // returns true if the 'exit' call
 // should be performed
@@ -7,9 +10,7 @@
 int
 exit_shell(char *cmd)
 {
-	// Your code here
-
-	return 0;
+	return !strcmp(cmd, "exit") || !strcmp(cmd, "exit ");
 }
 
 // returns true if "chdir" was performed
@@ -27,8 +28,36 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	// Your code here
+	if (!strncmp(cmd, "cd", 2)) {
+		if (!strcmp(cmd, "cd") || !strcmp(cmd, "cd ")) {
+			char *home = getenv("HOME");
 
+			if (chdir(getenv("HOME")) < 0) {
+				status = 1;
+			} else {
+				snprintf(promt, sizeof promt, "(%s)", home);
+				status = 0;
+			}
+
+			return true;
+		} else if (strlen(cmd) > 3 && cmd[2] == ' ') {
+			if (chdir(cmd + 3) == 0) {
+				char *new_prompt =
+				        getcwd(new_prompt, sizeof(new_prompt));
+				if (new_prompt == NULL) {
+					status = 1;
+					return true;
+				}
+				snprintf(promt, sizeof(promt), "(%s)", new_prompt);
+				status = 0;
+			} else {
+				perror("Error al hacer cd");
+				status = 1;
+			}
+
+			return true;
+		}
+	}
 	return 0;
 }
 
@@ -40,7 +69,15 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	// Your code here
-
+	if (!strncmp(cmd, "pwd", 3)) {
+		char cwd[PATH_MAX];
+		if (getcwd(cwd, sizeof(cwd)) == NULL) {
+			status = errno;
+			return true;
+		}
+		fprintf(stdout, "%s\n", cwd);
+		status = 0;
+		return true;
+	}
 	return 0;
 }

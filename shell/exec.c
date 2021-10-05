@@ -48,7 +48,18 @@ get_environ_value(char *arg, char *value, int idx)
 static void
 set_environ_vars(char **eargv, int eargc)
 {
-	// Your code here
+	for (int i = 0; i < eargc; i++) {
+		char key[ARGSIZE];
+		char value[ARGSIZE];
+
+		get_environ_key(eargv[i], key);
+		get_environ_value(eargv[i], value, block_contains(eargv[i], '='));
+
+		if (setenv(key, value, true) < 0) {
+			perror("Error al establecer la variable de entorno");
+			_exit(-1);
+		}
+	}
 }
 
 // opens the file in which the stdin/stdout/stderr
@@ -64,9 +75,18 @@ set_environ_vars(char **eargv, int eargc)
 static int
 open_redir_fd(char *file, int flags)
 {
-	// Your code here
+	if (file[0] == '&')
+		return atoi(file + 1);
 
-	return -1;
+	int file_fd;
+	int mode = 0;
+	if ((flags | O_CREAT) == flags) {
+		flags |= O_TRUNC;  // Para achicar el archivo si ya existia y es mas grande
+		mode = S_IWUSR | S_IRUSR;
+	}
+	file_fd = open(file, flags | O_CLOEXEC, mode);
+
+	return file_fd;
 }
 
 // executes a command - does not return
@@ -87,18 +107,20 @@ exec_cmd(struct cmd *cmd)
 	switch (cmd->type) {
 	case EXEC:
 		// spawns a command
-		//
-		// Your code here
-		printf("Commands are not yet implemented\n");
-		_exit(-1);
+		e = (struct execcmd *) cmd;
+
+		set_environ_vars(e->eargv, e->eargc);
+
+		if (execvp(e->argv[0], e->argv) < 0) {
+			perror("[EXEC] Error en exec");
+			_exit(-1);
+		}
 		break;
 
 	case BACK: {
 		// runs a command in background
-		//
-		// Your code here
-		printf("Background process are not yet implemented\n");
-		_exit(-1);
+		b = (struct backcmd *) cmd;
+		exec_cmd(b->c);
 		break;
 	}
 
@@ -108,23 +130,85 @@ exec_cmd(struct cmd *cmd)
 		// To check if a redirection has to be performed
 		// verify if file name's length (in the execcmd struct)
 		// is greater than zero
-		//
-		// Your code here
-		printf("Redirections are not yet implemented\n");
-		_exit(-1);
+		r = (struct execcmd *) cmd;
+		if (strlen(r->out_file) > 0) {
+			int file_fd =
+			        open_redir_fd(r->out_file, O_WRONLY | O_CREAT);
+			dup2(file_fd, 1);
+		}
+
+		if (strlen(r->in_file) > 0) {
+			int file_fd = open_redir_fd(r->in_file, O_RDONLY);
+			dup2(file_fd, 0);
+		}
+
+		if (strlen(r->err_file) > 0) {
+			int file_fd =
+			        open_redir_fd(r->err_file, O_WRONLY | O_CREAT);
+			dup2(file_fd, 2);
+		}
+
+		cmd->type = EXEC;
+		exec_cmd(cmd);
 		break;
 	}
 
 	case PIPE: {
 		// pipes two commands
-		//
-		// Your code here
-		printf("Pipes are not yet implemented\n");
+		p = (struct pipecmd *) cmd;
 
-		// free the memory allocated
-		// for the pipe tree structure
+		int fd_pipe[2];
+		if (pipe(fd_pipe)) {
+			perror("Error al crear el pipe");
+			_exit(-1);
+		}
+
+		int i1 = fork();
+		if (i1 < 0) {
+			perror("Error al crear un proceso (L)");
+			_exit(-1);
+		}
+
+		if (i1 == 0) {  // Left
+			close(fd_pipe[READ]);
+
+			dup2(fd_pipe[WRITE], 1);
+			close(fd_pipe[WRITE]);
+
+			exec_cmd(p->leftcmd);
+		}
+
+		int i2 = fork();
+		if (i2 < 0) {
+			perror("Error al crear un proceso (R)");
+			_exit(-1);
+		}
+
+		if (i2 == 0) {  // Right
+			close(fd_pipe[WRITE]);
+
+			dup2(fd_pipe[READ], 0);
+			close(fd_pipe[READ]);
+
+			exec_cmd(p->rightcmd);
+		}
+
+		// Coordinador
+		close(fd_pipe[0]);
+		close(fd_pipe[1]);
+
+		if (waitpid(i1, NULL, 0) < 0) {
+			perror("Error al hacer wait");
+			_exit(-1);
+		}
+		if (waitpid(i2, NULL, 0) < 0) {
+			perror("Error al hacer wait");
+			_exit(-1);
+		}
+
 		free_command(parsed_pipe);
 
+		_exit(0);
 		break;
 	}
 	}

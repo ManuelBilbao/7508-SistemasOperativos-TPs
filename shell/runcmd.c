@@ -50,11 +50,20 @@ run_cmd(char *cmd)
 	//		going to be run in the 'back'
 	// - print info about it with
 	// 	'print_back_info()'
-	//
-	// Your code here
+	if (waitpid(-1, &status, WNOHANG) < 0) {
+		perror("[Back] Error en wait");
+		_exit(-1);
+	}
 
-	// waits for the process to finish
-	waitpid(p, &status, 0);
+	if (parsed->type != BACK) {
+		// waits for the process to finish
+		if (waitpid(p, &status, 0) < 0) {
+			perror("Error en wait");
+			_exit(-1);
+		}
+	} else {
+		print_back_info(parsed);
+	}
 
 	print_status_info(parsed);
 
