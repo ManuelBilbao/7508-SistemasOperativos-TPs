@@ -2,6 +2,7 @@
 #include "types.h"
 #include "readline.h"
 #include "runcmd.h"
+#include "history.h"
 
 char promt[PRMTLEN] = { 0 };
 
@@ -30,6 +31,9 @@ init_shell()
 	} else {
 		snprintf(promt, sizeof promt, "(%s)", home);
 	}
+
+	if (!load_history())
+		fprintf(stderr, "No se pudo cargar el historial de comandos\n");
 }
 
 int

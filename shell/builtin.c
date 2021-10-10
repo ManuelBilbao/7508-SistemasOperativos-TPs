@@ -1,5 +1,4 @@
 #include "builtin.h"
-#include <linux/limits.h>
 
 extern int status;
 
@@ -80,5 +79,18 @@ pwd(char *cmd)
 	}
 	fprintf(stdout, "%s\n", cwd);
 	status = 0;
+	return true;
+}
+
+int
+history(char *cmd)
+{
+	if (strncmp(cmd, "history", 7) != 0)
+		return 0;
+
+	int n = (cmd[7] == ' ' && cmd[8] != '\0') ? atoi(cmd + 8)
+	                                          : MAX_HISTORY_CMDS;
+	print_history(n);
+
 	return true;
 }
