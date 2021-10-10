@@ -133,13 +133,3 @@ Cantidad de argumentos inválida
 $ ./script.sh Hi
 $
 ```
-
----
-
-### Desafío
-
-#### ¿Cuál es la función de los parámetros `MIN` y `TIME` del modo no canónico? ¿Qué se logra en el ejemplo dado al establecer a `MIN` en `1` y a `TIME` en `0`?
-
-`MIN` indica la cantidad mínima de bytes que debe haber en el buffer de lectura para que la función `read` retorne. `TIME`, por su parte, indica cuanto tiempo esperar para devolver. Ambos parámetros se relacionan entre sí para determinar el comportamiento.
-
-Establecer `MIN` en `1` y `TIME` en `0` hace que `read` retorne apenas tiene un byte en la cola. Si en la cola hay más de un byte, se va a retornar todos los que haya disponibles.
