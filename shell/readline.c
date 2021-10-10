@@ -37,8 +37,6 @@ void clear_stdout_line(int current, int last);
 void print_buffer(int size, int current);
 
 void move_cursor_horizontal(char dir, int n);
-void shift_left_buffer(int from);
-void shift_right_buffer(int from);
 void delete_characters(int n);
 
 bool handle_escape(char c, int *current, int *last, int *hist);
@@ -132,18 +130,6 @@ delete_characters(int n)
 	for (int i = 0; i < n; i++)
 		if (write(STDOUT_FILENO, DELETE_STRING, strlen(DELETE_STRING)) < 0)
 			error("Error al borrar un caracter");
-}
-
-void
-shift_left_buffer(int from)
-{
-	strcpy(&buffer[from], &buffer[from + 1]);
-}
-
-void
-shift_right_buffer(int from)
-{
-	strcpy(&buffer[from + 1], &buffer[from]);
 }
 
 bool
