@@ -22,16 +22,14 @@ static void
 init_shell()
 {
 	char buf[BUFLEN] = { 0 };
-	/*char *home = getenv("HOME");
+	char *home = getenv("HOME");
 
 	if (chdir(home) < 0) {
-	        snprintf(buf, sizeof buf, "cannot cd to %s ", home);
-	        perror(buf);
+		snprintf(buf, sizeof buf, "cannot cd to %s ", home);
+		perror(buf);
 	} else {
-	        snprintf(promt, sizeof promt, "(%s)", home);
-	}*/
-	getcwd(buf, sizeof(buf));
-	snprintf(promt, sizeof(promt), "(%s)", buf);
+		snprintf(promt, sizeof promt, "(%s)", home);
+	}
 }
 
 int
