@@ -197,18 +197,23 @@ exec_cmd(struct cmd *cmd)
 		close(fd_pipe[0]);
 		close(fd_pipe[1]);
 
+		int exit_status = 0;
+		int right_status = 0;
 		if (waitpid(i1, NULL, 0) < 0) {
 			perror("Error al hacer wait");
 			_exit(-1);
 		}
-		if (waitpid(i2, NULL, 0) < 0) {
+		if (waitpid(i2, &right_status, 0) < 0) {
 			perror("Error al hacer wait");
 			_exit(-1);
 		}
 
 		free_command(parsed_pipe);
 
-		_exit(0);
+		if (WIFEXITED(right_status))
+			exit_status = WEXITSTATUS(right_status);
+
+		exit(exit_status);
 		break;
 	}
 	}

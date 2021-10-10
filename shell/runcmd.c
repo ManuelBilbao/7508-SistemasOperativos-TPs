@@ -45,12 +45,9 @@ run_cmd(char *cmd)
 	parsed->pid = p;
 
 	// background process special treatment
-	// Hint:
-	// - check if the process is
-	//		going to be run in the 'back'
-	// - print info about it with
-	// 	'print_back_info()'
-	if (waitpid(-1, &status, WNOHANG) < 0) {
+	// Espero oportunamente un proceso hijo
+	// que se estuviera ejecutando en segundo plano
+	if (waitpid(-1, NULL, WNOHANG) < 0) {
 		perror("[Back] Error en wait");
 		_exit(-1);
 	}
@@ -61,11 +58,11 @@ run_cmd(char *cmd)
 			perror("Error en wait");
 			_exit(-1);
 		}
+		print_status_info(parsed);
 	} else {
 		print_back_info(parsed);
 	}
 
-	print_status_info(parsed);
 
 	free_command(parsed);
 

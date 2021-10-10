@@ -28,36 +28,37 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	if (!strncmp(cmd, "cd", 2)) {
-		if (!strcmp(cmd, "cd") || !strcmp(cmd, "cd ")) {
-			char *home = getenv("HOME");
+	if (strncmp(cmd, "cd", 2) != 0)
+		return 0;
 
-			if (chdir(getenv("HOME")) < 0) {
-				status = 1;
-			} else {
-				snprintf(promt, sizeof promt, "(%s)", home);
-				status = 0;
-			}
+	if (!strcmp(cmd, "cd") || !strcmp(cmd, "cd ")) {
+		char *home = getenv("HOME");
 
-			return true;
-		} else if (strlen(cmd) > 3 && cmd[2] == ' ') {
-			if (chdir(cmd + 3) == 0) {
-				char *new_prompt =
-				        getcwd(new_prompt, sizeof(new_prompt));
-				if (new_prompt == NULL) {
-					status = 1;
-					return true;
-				}
-				snprintf(promt, sizeof(promt), "(%s)", new_prompt);
-				status = 0;
-			} else {
-				perror("Error al hacer cd");
-				status = 1;
-			}
-
-			return true;
+		if (chdir(home) == 0) {
+			status = 0;
+			snprintf(promt, sizeof promt, "(%s)", home);
+		} else {
+			status = 1;
 		}
+
+		return true;
+	} else if (strlen(cmd) > 3 && cmd[2] == ' ') {
+		if (chdir(cmd + 3) == 0) {
+			char *new_dir = getcwd(new_dir, sizeof(new_dir));
+			if (new_dir == NULL) {
+				perror("Error al obtener el nuevo directorio");
+				exit(-1);
+			}
+			snprintf(promt, sizeof(promt), "(%s)", new_dir);
+			status = 0;
+		} else {
+			perror("Error al hacer cd");
+			status = 1;
+		}
+
+		return true;
 	}
+
 	return 0;
 }
 
@@ -69,15 +70,15 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	if (!strncmp(cmd, "pwd", 3)) {
-		char cwd[PATH_MAX];
-		if (getcwd(cwd, sizeof(cwd)) == NULL) {
-			status = errno;
-			return true;
-		}
-		fprintf(stdout, "%s\n", cwd);
-		status = 0;
+	if (strcmp(cmd, "pwd") != 0 || strcmp(cmd, "pwd ") != 0)
+		return 0;
+
+	char *cwd = getcwd(cwd, sizeof(cwd));
+	if (cwd == NULL) {
+		status = errno;
 		return true;
 	}
-	return 0;
+	fprintf(stdout, "%s\n", cwd);
+	status = 0;
+	return true;
 }
