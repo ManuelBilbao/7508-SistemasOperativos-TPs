@@ -38,8 +38,10 @@ void print_buffer(int size, int current);
 
 void move_cursor_horizontal(char dir, int n);
 void delete_characters(int n);
+int prev_space(int current);
+int next_space(int current, int last);
 
-bool handle_escape(char c, int *current, int *last, int *hist);
+bool handle_escape(char c, bool* control, int *current, int *last, int *hist);
 
 void
 print_prompt_symbol()
@@ -132,11 +134,38 @@ delete_characters(int n)
 			error("Error al borrar un caracter");
 }
 
+int prev_space(int current) {
+	int i = 1;
+	for (; current - i >= 0; i++) {
+		if (buffer[current-i] == ' ')
+			return i;
+	}
+
+	return i-1;
+}
+
+int next_space(int current, int last) {
+	int i = 1;
+	for (; i + current < last; i++) {
+		if (buffer[i+current] == ' ')
+			return i;
+	}
+
+	return i;
+}
+
 bool
-handle_escape(char c, int *current, int *last, int *hist)
+handle_escape(char c, bool* control, int *current, int *last, int *hist)
 {
+	int n;
 	switch (c) {
 	case '[':
+		return true;
+	// Ctrl+Izq y Ctrl+Der son de la forma ESC[1;5C
+	case '1':
+	case ';':
+	case '5':
+		*control = true;
 		return true;
 	case HOME_ESCAPE:
 		move_cursor_horizontal('l', *current);
@@ -152,16 +181,20 @@ handle_escape(char c, int *current, int *last, int *hist)
 		if (*current <= 0)
 			break;
 
-		move_cursor_horizontal('l', 1);
-		(*current)--;
+		n = (*control) ? prev_space(*current) : 1;
+
+		move_cursor_horizontal('l', n);
+		*current -= n;
 
 		break;
 	case RIGHT_ARROW_ESCAPE:
 		if (*current >= *last)
 			break;
 
-		move_cursor_horizontal('r', 1);
-		(*current)++;
+		n = (*control) ? next_space(*current, *last) : 1;
+
+		move_cursor_horizontal('r', n);
+		*current += n;
 
 		break;
 	case UP_ARROW_ESCAPE:
@@ -181,8 +214,10 @@ handle_escape(char c, int *current, int *last, int *hist)
 		}
 
 		print_buffer(*last, *current);
+		break;
 	}
 
+	*control = false;
 	return false;
 }
 
@@ -193,7 +228,7 @@ read_line(const char *promt)
 {
 	char c;
 	int last = 0, current = 0, hist_i = 0;
-	bool escape = false;
+	bool escape = false, control = false;
 
 	print_prompt(promt);
 
@@ -226,7 +261,7 @@ read_line(const char *promt)
 			break;
 		default:
 			if (escape) {
-				escape = handle_escape(c, &current, &last, &hist_i);
+				escape = handle_escape(c, &control, &current, &last, &hist_i);
 				break;
 			}
 
@@ -235,8 +270,13 @@ read_line(const char *promt)
 			buffer[current++] = c;
 			last++;
 
-			clear_stdout_line(current, last);
-			print_buffer(last, current);
+			if (current == last) {
+				if (write(STDOUT_FILENO, &c, sizeof(c)) < 0)
+					error("Error al intentar escribir en la terminal");
+			} else {
+				clear_stdout_line(current, last);
+				print_buffer(last, current);
+			}
 
 			break;
 		}
