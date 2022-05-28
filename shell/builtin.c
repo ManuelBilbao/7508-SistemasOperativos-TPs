@@ -1,4 +1,7 @@
 #include "builtin.h"
+#include <linux/limits.h>
+
+extern int status;
 
 // returns true if the 'exit' call
 // should be performed
@@ -7,9 +10,7 @@
 int
 exit_shell(char *cmd)
 {
-	// Your code here
-
-	return 0;
+	return !strcmp(cmd, "exit") || !strcmp(cmd, "exit ");
 }
 
 // returns true if "chdir" was performed
@@ -27,7 +28,36 @@ exit_shell(char *cmd)
 int
 cd(char *cmd)
 {
-	// Your code here
+	if (strncmp(cmd, "cd", 2) != 0)
+		return 0;
+
+	if (!strcmp(cmd, "cd") || !strcmp(cmd, "cd ")) {
+		char *home = getenv("HOME");
+
+		if (chdir(home) == 0) {
+			status = 0;
+			snprintf(promt, sizeof promt, "(%s)", home);
+		} else {
+			status = 1;
+		}
+
+		return true;
+	} else if (strlen(cmd) > 3 && cmd[2] == ' ') {
+		if (chdir(cmd + 3) == 0) {
+			char *new_dir = getcwd(new_dir, sizeof(new_dir));
+			if (new_dir == NULL) {
+				perror("Error al obtener el nuevo directorio");
+				exit(-1);
+			}
+			snprintf(promt, sizeof(promt), "(%s)", new_dir);
+			status = 0;
+		} else {
+			perror("Error al hacer cd");
+			status = 1;
+		}
+
+		return true;
+	}
 
 	return 0;
 }
@@ -40,7 +70,15 @@ cd(char *cmd)
 int
 pwd(char *cmd)
 {
-	// Your code here
+	if (strcmp(cmd, "pwd") != 0 || strcmp(cmd, "pwd ") != 0)
+		return 0;
 
-	return 0;
+	char *cwd = getcwd(cwd, sizeof(cwd));
+	if (cwd == NULL) {
+		status = errno;
+		return true;
+	}
+	fprintf(stdout, "%s\n", cwd);
+	status = 0;
+	return true;
 }
