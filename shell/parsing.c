@@ -85,6 +85,26 @@ parse_environ_var(struct execcmd *c, char *arg)
 	return false;
 }
 
+static char *
+expand_history_arg(char *arg)
+{
+	int n;
+	if (arg[1] == '!')
+		n = 2;
+	else if (arg[1] == '-')
+		n = atoi(arg + 2) + 1;
+	else
+		return arg;
+
+	char *value = reverse_history(n);
+	if (strlen(value) > strlen(arg))
+		arg = realloc(arg, strlen(value) * sizeof(char));
+
+	strcpy(arg, value);
+
+	return arg;
+}
+
 // this function will be called for every token, and it should
 // expand environment variables. In other words, if the token
 // happens to start with '$', the correct substitution with the
@@ -101,6 +121,9 @@ parse_environ_var(struct execcmd *c, char *arg)
 static char *
 expand_environ_var(char *arg)
 {
+	if (arg[0] == '!')
+		return expand_history_arg(arg);
+
 	if (arg[0] != '$')
 		return arg;
 

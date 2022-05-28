@@ -1,4 +1,5 @@
 #include "runcmd.h"
+#include "history.h"
 
 int status = 0;
 struct cmd *parsed_pipe;
@@ -15,6 +16,8 @@ run_cmd(char *cmd)
 	if (cmd[0] == END_STRING)
 		return 0;
 
+	record_command_in_history(cmd);
+
 	// "cd" built-in call
 	if (cd(cmd))
 		return 0;
@@ -25,6 +28,9 @@ run_cmd(char *cmd)
 
 	// "pwd" buil-in call
 	if (pwd(cmd))
+		return 0;
+
+	if (history(cmd))
 		return 0;
 
 	// parses the command line
